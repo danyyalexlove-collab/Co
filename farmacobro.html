@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f2d1a">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FarmaCobro">
+<title>FarmaCobro — Control de Comidas</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --verde-oscuro:#0f2d1a;
+  --verde:#1a4d2e;
+  --verde-medio:#2d6a4f;
+  --verde-claro:#52b788;
+  --verde-bright:#74c69d;
+  --amarillo:#f4a261;
+  --rojo:#e63946;
+  --crema:#f8f4e8;
+  --blanco:#ffffff;
+  --gris:#8a9a8e;
+  --gris-claro:#e8ede9;
+  --sombra:0 4px 24px rgba(15,45,26,0.15);
+  --radio:16px;
+}
+html,body{height:100%;font-family:'Sora',sans-serif;background:var(--crema);color:var(--verde-oscuro);overflow:hidden;}
+
+/* ===== LOGIN ===== */
+#login-screen{
+  position:fixed;inset:0;
+  background:linear-gradient(160deg,var(--verde-oscuro) 0%,var(--verde) 50%,var(--verde-medio) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px;z-index:1000;
+  transition:opacity 0.4s,transform 0.4s;
+}
+#login-screen.hidden{opacity:0;transform:scale(0.95);pointer-events:none;}
+.login-logo{
+  font-family:'DM Serif Display',serif;
+  font-size:2.8rem;color:var(--crema);
+  margin-bottom:6px;letter-spacing:-0.02em;
+}
+.login-logo span{color:var(--verde-bright);font-style:italic;}
+.login-sub{font-size:0.8rem;color:rgba(248,244,232,0.5);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:48px;}
+.login-card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:24px;padding:32px;width:100%;max-width:360px;
+  backdrop-filter:blur(10px);
+}
+.login-title{font-size:1.1rem;font-weight:600;color:var(--crema);margin-bottom:24px;text-align:center;}
+.role-btns{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+.role-btn{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:12px;padding:16px 20px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;transition:all 0.2s;text-align:left;
+}
+.role-btn:hover,.role-btn.selected{background:rgba(116,198,157,0.2);border-color:var(--verde-bright);}
+.role-icon{font-size:1.6rem;}
+.role-info{flex:1;}
+.role-name{font-size:0.95rem;font-weight:600;color:var(--crema);}
+.role-desc{font-size:0.75rem;color:rgba(248,244,232,0.5);margin-top:2px;}
+.login-input{
+  width:100%;background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:10px;padding:14px 16px;
+  color:var(--crema);font-family:'Sora',sans-serif;font-size:0.9rem;
+  outline:none;margin-bottom:12px;
+  transition:border-color 0.2s;
+}
+.login-input::placeholder{color:rgba(248,244,232,0.35);}
+.login-input:focus{border-color:var(--verde-bright);}
+.login-btn{
+  width:100%;background:var(--verde-bright);color:var(--verde-oscuro);
+  border:none;border-radius:12px;padding:16px;
+  font-family:'Sora',sans-serif;font-size:0.95rem;font-weight:700;
+  cursor:pointer;transition:all 0.2s;
+}
+.login-btn:hover{background:#95d5b2;transform:translateY(-1px);}
+
+/* ===== APP SHELL ===== */
+#app{
+  display:none;flex-direction:column;height:100%;
+  position:fixed;inset:0;
+}
+#app.visible{display:flex;}
+
+/* TOPBAR */
+.topbar{
+  background:var(--verde-oscuro);
+  padding:16px 20px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.topbar-logo{font-family:'DM Serif Display',serif;font-size:1.3rem;color:var(--crema);}
+.topbar-logo span{color:var(--verde-bright);font-style:italic;}
+.topbar-user{display:flex;align-items:center;gap:8px;}
+.topbar-role{
+  font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--verde-bright);background:rgba(116,198,157,0.15);
+  padding:4px 10px;border-radius:20px;
+}
+.topbar-avatar{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--verde-medio);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.8rem;font-weight:700;color:var(--crema);
+  flex-shrink:0;
+}
+.logout-btn{
+  background:none;border:none;color:rgba(248,244,232,0.4);
+  font-size:0.7rem;cursor:pointer;padding:4px 8px;
+  transition:color 0.2s;
+}
+.logout-btn:hover{color:var(--crema);}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;padding:20px 16px;padding-bottom:80px;}
+
+/* BOTTOM NAV */
+.bottom-nav{
+  background:var(--blanco);
+  border-top:1px solid var(--gris-claro);
+  display:flex;flex-shrink:0;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.08);
+}
+.nav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  padding:10px 0 8px;cursor:pointer;
+  border:none;background:none;
+  transition:all 0.2s;color:var(--gris);
+}
+.nav-item.active{color:var(--verde);}
+.nav-icon{font-size:1.3rem;margin-bottom:2px;}
+.nav-label{font-size:0.6rem;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;}
+.nav-item.active .nav-label{color:var(--verde);}
+
+/* VIEWS */
+.view{display:none;}
+.view.active{display:block;}
+
+/* CARDS */
+.card{
+  background:var(--blanco);border-radius:var(--radio);
+  padding:20px;margin-bottom:14px;
+  box-shadow:var(--sombra);
+}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-title{font-size:1rem;font-weight:700;color:var(--verde-oscuro);}
+.card-sub{font-size:0.75rem;color:var(--gris);margin-top:2px;}
+
+/* BADGES */
+.badge{
+  font-size:0.68rem;font-weight:700;letter-spacing:0.05em;
+  padding:4px 10px;border-radius:20px;text-transform:uppercase;
+}
+.badge-verde{background:#d8f3dc;color:var(--verde);}
+.badge-rojo{background:#ffe8ea;color:var(--rojo);}
+.badge-amarillo{background:#fff3e0;color:#e07b00;}
+.badge-gris{background:var(--gris-claro);color:var(--gris);}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
+.stat-card{
+  background:var(--blanco);border-radius:14px;padding:16px;
+  box-shadow:var(--sombra);text-align:center;
+}
+.stat-num{font-family:'DM Serif Display',serif;font-size:1.8rem;color:var(--verde);line-height:1;}
+.stat-label{font-size:0.68rem;color:var(--gris);margin-top:4px;text-transform:uppercase;letter-spacing:0.08em;}
+
+/* LISTA GRANJAS */
+.granja-item{
+  background:var(--blanco);border-radius:14px;padding:16px 18px;
+  margin-bottom:10px;box-shadow:var(--sombra);
+  display:flex;align-items:center;gap:14px;cursor:pointer;
+  transition:transform 0.15s,box-shadow 0.15s;border:2px solid transparent;
+}
+.granja-item:hover{transform:translateY(-1px);border-color:var(--verde-claro);}
+.granja-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,var(--verde),var(--verde-medio));
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;flex-shrink:0;
+}
+.granja-info{flex:1;}
+.granja-name{font-weight:700;font-size:0.95rem;}
+.granja-meta{font-size:0.75rem;color:var(--gris);margin-top:2px;}
+.granja-deuda{text-align:right;}
+.granja-monto{font-weight:800;font-size:1rem;color:var(--rojo);}
+.granja-monto.pagado{color:var(--verde-claro);}
+.granja-monto-label{font-size:0.65rem;color:var(--gris);}
+
+/* TRABAJADOR ITEM */
+.trabajador-item{
+  background:var(--blanco);border-radius:12px;padding:14px 16px;
+  margin-bottom:8px;box-shadow:0 2px 10px rgba(0,0,0,0.06);
+  display:flex;align-items:center;gap:12px;cursor:pointer;
+  transition:all 0.15s;
+}
+.trabajador-item:hover{transform:translateX(4px);}
+.trab-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--verde-claro),var(--verde-bright));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:0.85rem;color:var(--verde-oscuro);flex-shrink:0;
+}
+.trab-info{flex:1;}
+.trab-name{font-weight:600;font-size:0.9rem;}
+.trab-meta{font-size:0.72rem;color:var(--gris);}
+.trab-deuda{font-weight:800;font-size:0.95rem;}
+.trab-deuda.debe{color:var(--rojo);}
+.trab-deuda.pagado{color:var(--verde-claro);}
+
+/* REGISTRO ITEM */
+.registro-item{
+  border-bottom:1px solid var(--gris-claro);padding:12px 0;
+  display:flex;align-items:center;gap:12px;
+}
+.registro-item:last-child{border-bottom:none;}
+.reg-fecha{font-size:0.7rem;color:var(--gris);min-width:60px;}
+.reg-info{flex:1;}
+.reg-comida{font-size:0.85rem;font-weight:600;}
+.reg-granja{font-size:0.7rem;color:var(--gris);}
+.reg-monto{font-weight:700;font-size:0.95rem;}
+.reg-monto.pagado{color:var(--verde);}
+.reg-monto.debe{color:var(--rojo);}
+.lock-icon{font-size:0.7rem;color:var(--gris);opacity:0.5;}
+
+/* FORMS */
+.form-group{margin-bottom:16px;}
+.form-label{font-size:0.75rem;font-weight:600;color:var(--verde-oscuro);margin-bottom:6px;display:block;letter-spacing:0.05em;text-transform:uppercase;}
+.form-input,.form-select{
+  width:100%;background:var(--gris-claro);
+  border:2px solid transparent;border-radius:10px;
+  padding:12px 14px;font-family:'Sora',sans-serif;
+  font-size:0.9rem;color:var(--verde-oscuro);outline:none;
+  transition:border-color 0.2s;
+}
+.form-input:focus,.form-select:focus{border-color:var(--verde-claro);background:var(--blanco);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* BOTONES */
+.btn{
+  border:none;border-radius:12px;padding:14px 20px;
+  font-family:'Sora',sans-serif;font-size:0.9rem;font-weight:700;
+  cursor:pointer;transition:all 0.2s;width:100%;
+}
+.btn-primary{background:var(--verde);color:var(--blanco);}
+.btn-primary:hover{background:var(--verde-medio);transform:translateY(-1px);}
+.btn-danger{background:#ffe8ea;color:var(--rojo);}
+.btn-sm{padding:8px 14px;font-size:0.78rem;width:auto;border-radius:8px;}
+.btn-outline{background:transparent;border:2px solid var(--verde-claro);color:var(--verde);}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  z-index:500;display:flex;align-items:flex-end;
+  opacity:0;pointer-events:none;transition:opacity 0.3s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--blanco);border-radius:24px 24px 0 0;
+  width:100%;padding:24px 20px 40px;
+  transform:translateY(100%);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+  max-height:90vh;overflow-y:auto;
+}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-handle{width:40px;height:4px;background:var(--gris-claro);border-radius:2px;margin:0 auto 20px;}
+.modal-title{font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:20px;color:var(--verde-oscuro);}
+
+/* SECTION HEADER */
+.section-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.section-title-sm{font-size:0.75rem;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--gris);}
+
+/* FAB */
+.fab{
+  position:fixed;right:20px;bottom:76px;
+  width:54px;height:54px;border-radius:50%;
+  background:var(--verde);color:var(--blanco);
+  border:none;font-size:1.5rem;cursor:pointer;
+  box-shadow:0 4px 20px rgba(26,77,46,0.4);
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;z-index:100;
+}
+.fab:hover{transform:scale(1.1);background:var(--verde-medio);}
+
+/* ALERTA */
+.alerta{
+  background:#fff3e0;border:1px solid #ffb74d;
+  border-radius:10px;padding:12px 14px;
+  font-size:0.8rem;color:#e07b00;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:40px 20px;color:var(--gris);}
+.empty-icon{font-size:2.5rem;margin-bottom:12px;}
+.empty p{font-size:0.85rem;}
+
+/* BACK BUTTON */
+.back-btn{
+  display:flex;align-items:center;gap:6px;
+  background:none;border:none;color:var(--verde);
+  font-family:'Sora',sans-serif;font-size:0.85rem;font-weight:600;
+  cursor:pointer;padding:0;margin-bottom:16px;
+}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--verde-oscuro);color:var(--crema);
+  padding:12px 24px;border-radius:30px;font-size:0.82rem;font-weight:500;
+  opacity:0;transition:all 0.3s;z-index:999;white-space:nowrap;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* RESUMEN DUEÑO */
+.resumen-granja{
+  background:linear-gradient(135deg,var(--verde-oscuro),var(--verde));
+  border-radius:18px;padding:20px;margin-bottom:14px;color:var(--crema);
+}
+.resumen-granja-name{font-family:'DM Serif Display',serif;font-size:1.2rem;margin-bottom:12px;}
+.resumen-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.res-stat{text-align:center;}
+.res-num{font-size:1.3rem;font-weight:800;}
+.res-label{font-size:0.6rem;opacity:0.6;text-transform:uppercase;letter-spacing:0.08em;}
+
+/* CHIP */
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--gris-claro);border-radius:20px;
+  padding:4px 12px;font-size:0.75rem;font-weight:600;
+  cursor:pointer;border:2px solid transparent;
+  transition:all 0.15s;margin:3px;
+}
+.chip.selected{background:#d8f3dc;border-color:var(--verde-claro);color:var(--verde);}
+
+.semana-selector{
+  display:flex;align-items:center;gap:10px;margin-bottom:16px;
+}
+.semana-selector button{
+  background:var(--gris-claro);border:none;border-radius:8px;
+  width:32px;height:32px;cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+}
+.semana-label{flex:1;text-align:center;font-size:0.82rem;font-weight:600;color:var(--verde-oscuro);}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <div class="login-logo">Farma<span>Cobro</span></div>
+  <div class="login-sub">Control de comidas · Granjas Ontario</div>
+  <div class="login-card">
+    <div class="login-title">¿Cómo vas a entrar?</div>
+    <div class="role-btns">
+      <button class="role-btn" onclick="selectRole('dueno')" id="btn-dueno">
+        <div class="role-icon">👑</div>
+        <div class="role-info">
+          <div class="role-name">Dueño del Negocio</div>
+          <div class="role-desc">Ver todas las granjas y reportes</div>
+        </div>
+      </button>
+      <button class="role-btn" onclick="selectRole('cobrador')" id="btn-cobrador">
+        <div class="role-icon">🧾</div>
+        <div class="role-info">
+          <div class="role-name">Cobrador</div>
+          <div class="role-desc">Registrar y cobrar comidas</div>
+        </div>
+      </button>
+      <button class="role-btn" onclick="selectRole('trabajador')" id="btn-trabajador">
+        <div class="role-icon">👷</div>
+        <div class="role-info">
+          <div class="role-name">Trabajador</div>
+          <div class="role-desc">Ver mis pedidos y deudas</div>
+        </div>
+      </button>
+    </div>
+    <input class="login-input" id="login-nombre" placeholder="Tu nombre completo" type="text">
+    <input class="login-input" id="login-pin" placeholder="PIN (4 dígitos)" type="password" maxlength="4" style="display:none">
+    <button class="login-btn" onclick="doLogin()">Entrar →</button>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">Farma<span>Cobro</span></div>
+    <div class="topbar-user">
+      <span class="topbar-role" id="topbar-role">—</span>
+      <div class="topbar-avatar" id="topbar-avatar">?</div>
+      <button class="logout-btn" onclick="logout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content" id="main-content">
+
+    <!-- VIEW: INICIO DUEÑO -->
+    <div class="view" id="view-dueno-inicio">
+      <div style="margin-bottom:20px;">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.6rem;color:var(--verde-oscuro);">Buenos días, <span id="dueno-nombre-bienvenida" style="color:var(--verde);font-style:italic;"></span></div>
+        <div style="font-size:0.8rem;color:var(--gris);margin-top:4px;">Resumen general esta semana</div>
+      </div>
+      <div class="stats-row" id="stats-dueno"></div>
+      <div class="section-header">
+        <div class="section-title-sm">Tus Granjas</div>
+        <button class="btn btn-outline btn-sm" onclick="abrirModalGranja()">+ Nueva Granja</button>
+      </div>
+      <div id="lista-granjas-dueno"></div>
+    </div>
+
+    <!-- VIEW: DETALLE GRANJA DUEÑO -->
+    <div class="view" id="view-dueno-granja">
+      <button class="back-btn" onclick="volverInicio()">← Volver</button>
+      <div class="resumen-granja" id="resumen-granja-header"></div>
+      <div class="section-header">
+        <div class="section-title-sm">Trabajadores</div>
+      </div>
+      <div id="lista-trabajadores-granja"></div>
+    </div>
+
+    <!-- VIEW: COBRADOR GRANJAS -->
+    <div class="view" id="view-cobrador-granjas">
+      <div style="margin-bottom:20px;">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--verde-oscuro);">Mis Granjas</div>
+        <div style="font-size:0.8rem;color:var(--gris);margin-top:4px;">Selecciona para registrar</div>
+      </div>
+      <div class="section-header">
+        <div class="section-title-sm">Granjas asignadas</div>
+        <button class="btn btn-outline btn-sm" onclick="abrirModalGranja()">+ Nueva</button>
+      </div>
+      <div id="lista-granjas-cobrador"></div>
+    </div>
+
+    <!-- VIEW: COBRADOR EN GRANJA -->
+    <div class="view" id="view-cobrador-en-granja">
+      <button class="back-btn" onclick="volverGranjasCobrador()">← Mis Granjas</button>
+      <div id="cobrador-granja-titulo" style="font-family:'DM Serif Display',serif;font-size:1.4rem;margin-bottom:16px;"></div>
+      <div class="section-header">
+        <div class="section-title-sm">Trabajadores</div>
+        <button class="btn btn-outline btn-sm" onclick="abrirModalTrabajador()">+ Agregar</button>
+      </div>
+      <div id="lista-trabajadores-cobrador"></div>
+    </div>
+
+    <!-- VIEW: DETALLE TRABAJADOR (COBRADOR) -->
+    <div class="view" id="view-detalle-trabajador">
+      <button class="back-btn" id="back-desde-trabajador" onclick="volverDesdeDetalleTrab()">← Volver</button>
+      <div id="trab-detalle-header"></div>
+      <div class="card" style="margin-top:14px;">
+        <div class="card-title" style="margin-bottom:14px;">➕ Registrar Comida</div>
+        <div class="form-group">
+          <label class="form-label">Comida</label>
+          <input class="form-input" id="reg-comida" placeholder="Ej: Comida completa $8">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Precio $CAD</label>
+            <input class="form-input" id="reg-precio" type="number" placeholder="8.00" step="0.50">
+          </div>
+          <div class="form-group">
+            <label class="form-label">¿Pagó?</label>
+            <select class="form-select" id="reg-pago">
+              <option value="debe">No pagó (debe)</option>
+              <option value="pagado">Pagó en efectivo</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="registrarComida()">Registrar Comida 🔒</button>
+        <div style="font-size:0.7rem;color:var(--gris);text-align:center;margin-top:8px;">⚠️ Una vez guardado no se puede modificar</div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="section-header">
+          <div class="section-title-sm">Historial</div>
+          <span id="trab-deuda-total" class="badge badge-rojo"></span>
+        </div>
+        <div id="lista-registros-trab"></div>
+      </div>
+      <div class="card" id="cobrar-section" style="margin-top:14px;display:none;">
+        <div class="card-title" style="margin-bottom:10px;">💰 Registrar Cobro</div>
+        <div class="alerta">⚠️ El cobro queda registrado permanentemente</div>
+        <div class="form-group">
+          <label class="form-label">Monto cobrado $CAD</label>
+          <input class="form-input" id="cobro-monto" type="number" placeholder="0.00">
+        </div>
+        <button class="btn btn-primary" onclick="registrarCobro()">Confirmar Cobro 🔒</button>
+      </div>
+    </div>
+
+    <!-- VIEW: TRABAJADOR -->
+    <div class="view" id="view-trabajador">
+      <div style="margin-bottom:20px;">
+        <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--verde-oscuro);">Mis Pedidos</div>
+        <div style="font-size:0.8rem;color:var(--gris);margin-top:4px;" id="trab-granja-label"></div>
+      </div>
+      <div class="stats-row" id="stats-trabajador"></div>
+      <div class="section-header"><div class="section-title-sm">Historial de comidas</div></div>
+      <div id="lista-registros-trabajador"></div>
+    </div>
+
+    <!-- VIEW: REPORTES -->
+    <div class="view" id="view-reportes">
+      <div style="font-family:'DM Serif Display',serif;font-size:1.5rem;margin-bottom:6px;">Reportes</div>
+      <div style="font-size:0.8rem;color:var(--gris);margin-bottom:20px;">Resumen por granja y semana</div>
+      <div id="reporte-contenido"></div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav" id="bottom-nav"></div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fab-btn" style="display:none" onclick="fabAction()">+</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== MODALES ===== -->
+
+<!-- Modal Nueva Granja -->
+<div class="modal-overlay" id="modal-granja">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🌿 Nueva Granja</div>
+    <div class="form-group">
+      <label class="form-label">Nombre de la Granja</label>
+      <input class="form-input" id="nueva-granja-nombre" placeholder="Ej: Highline Mushrooms">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Ubicación</label>
+      <input class="form-input" id="nueva-granja-ubicacion" placeholder="Ej: Leamington, ON">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cobrador asignado</label>
+      <input class="form-input" id="nueva-granja-cobrador" placeholder="Nombre del cobrador">
+    </div>
+    <button class="btn btn-primary" onclick="guardarGranja()">Guardar Granja</button>
+    <button class="btn" style="margin-top:8px;background:var(--gris-claro);color:var(--gris);" onclick="cerrarModal('modal-granja')">Cancelar</button>
+  </div>
+</div>
+
+<!-- Modal Nuevo Trabajador -->
+<div class="modal-overlay" id="modal-trabajador">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👷 Nuevo Trabajador</div>
+    <div class="form-group">
+      <label class="form-label">Nombre completo</label>
+      <input class="form-input" id="nuevo-trab-nombre" placeholder="Nombre del trabajador">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Empresa / Departamento</label>
+      <input class="form-input" id="nuevo-trab-empresa" placeholder="Ej: Línea de empaque">
+    </div>
+    <button class="btn btn-primary" onclick="guardarTrabajador()">Agregar Trabajador</button>
+    <button class="btn" style="margin-top:8px;background:var(--gris-claro);color:var(--gris);" onclick="cerrarModal('modal-trabajador')">Cancelar</button>
+  </div>
+</div>
+
+<script>
+// ===== ESTADO GLOBAL =====
+let currentRole = null;
+let currentUser = null;
+let currentGranjaId = null;
+let currentTrabajadorId = null;
+let vistaAnterior = null;
+
+// ===== DATOS DE EJEMPLO =====
+let data = {
+  granjas: [
+    { id: 1, nombre: 'Highline Mushrooms', ubicacion: 'Leamington, ON', cobrador: 'Carlos Mendez' },
+    { id: 2, nombre: 'Auxilium Farms', ubicacion: 'Kingsville, ON', cobrador: 'Luis Torres' },
+    { id: 3, nombre: 'Mucci Farms', ubicacion: 'Leamington, ON', cobrador: 'Carlos Mendez' },
+  ],
+  trabajadores: [
+    { id: 1, granjaId: 1, nombre: 'Miguel Hernández', empresa: 'Línea A' },
+    { id: 2, granjaId: 1, nombre: 'José Ramírez', empresa: 'Empaque' },
+    { id: 3, granjaId: 1, nombre: 'Alejandro Cruz', empresa: 'Línea B' },
+    { id: 4, granjaId: 2, nombre: 'Roberto Flores', empresa: 'Cosecha' },
+    { id: 5, granjaId: 2, nombre: 'Antonio García', empresa: 'Empaque' },
+    { id: 6, granjaId: 3, nombre: 'Eduardo López', empresa: 'Línea A' },
+  ],
+  registros: [
+    { id: 1, trabId: 1, granjaId: 1, comida: 'Comida completa', precio: 8, pago: 'debe', fecha: '2026-04-21', locked: true },
+    { id: 2, trabId: 1, granjaId: 1, comida: 'Comida completa', precio: 8, pago: 'pagado', fecha: '2026-04-22', locked: true },
+    { id: 3, trabId: 1, granjaId: 1, comida: 'Comida + refresco', precio: 10, pago: 'debe', fecha: '2026-04-23', locked: true },
+    { id: 4, trabId: 2, granjaId: 1, comida: 'Comida completa', precio: 8, pago: 'debe', fecha: '2026-04-21', locked: true },
+    { id: 5, trabId: 2, granjaId: 1, comida: 'Comida completa', precio: 8, pago: 'pagado', fecha: '2026-04-24', locked: true },
+    { id: 6, trabId: 3, granjaId: 1, comida: 'Solo tacos', precio: 6, pago: 'pagado', fecha: '2026-04-22', locked: true },
+    { id: 7, trabId: 4, granjaId: 2, comida: 'Comida completa', precio: 8, pago: 'debe', fecha: '2026-04-21', locked: true },
+    { id: 8, trabId: 5, granjaId: 2, comida: 'Comida completa', precio: 8, pago: 'pagado', fecha: '2026-04-23', locked: true },
+    { id: 9, trabId: 6, granjaId: 3, comida: 'Comida + postre', precio: 10, pago: 'debe', fecha: '2026-04-22', locked: true },
+  ],
+  cobros: [],
+  nextId: { granjas: 4, trabajadores: 7, registros: 10, cobros: 1 }
+};
+
+// ===== UTILIDADES =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function abrirModal(id) { document.getElementById(id).classList.add('open'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+function deudaTrabajador(trabId) {
+  const regs = data.registros.filter(r => r.trabId === trabId && r.pago === 'debe');
+  const cobros = data.cobros.filter(c => c.trabId === trabId);
+  const totalDebe = regs.reduce((s, r) => s + r.precio, 0);
+  const totalCobrado = cobros.reduce((s, c) => s + c.monto, 0);
+  return Math.max(0, totalDebe - totalCobrado);
+}
+
+function totalGranja(granjaId) {
+  const regs = data.registros.filter(r => r.granjaId === granjaId);
+  const pagado = regs.filter(r => r.pago === 'pagado').reduce((s,r) => s+r.precio, 0);
+  const debe = data.trabajadores
+    .filter(t => t.granjaId === granjaId)
+    .reduce((s, t) => s + deudaTrabajador(t.id), 0);
+  return { pagado, debe, total: pagado + debe };
+}
+
+function formatDate(d) {
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}`;
+}
+
+function todayStr() {
+  const d = new Date();
+  return d.toISOString().split('T')[0];
+}
+
+function iniciales(nombre) {
+  return nombre.split(' ').map(p => p[0]).join('').substring(0,2).toUpperCase();
+}
+
+// ===== LOGIN =====
+let selectedRole = null;
+function selectRole(role) {
+  selectedRole = role;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('btn-' + role).classList.add('selected');
+  document.getElementById('login-pin').style.display = role === 'dueno' ? 'block' : 'none';
+}
+
+function doLogin() {
+  if (!selectedRole) { showToast('Selecciona tu rol'); return; }
+  const nombre = document.getElementById('login-nombre').value.trim();
+  if (!nombre) { showToast('Escribe tu nombre'); return; }
+  if (selectedRole === 'dueno') {
+    const pin = document.getElementById('login-pin').value;
+    if (pin !== '1234') { showToast('PIN incorrecto (demo: 1234)'); return; }
+  }
+  currentRole = selectedRole;
+  currentUser = nombre;
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+  document.getElementById('topbar-role').textContent = selectedRole === 'dueno' ? 'Dueño' : selectedRole === 'cobrador' ? 'Cobrador' : 'Trabajador';
+  document.getElementById('topbar-avatar').textContent = iniciales(nombre);
+  setupNav();
+  renderInicio();
+}
+
+function logout() {
+  currentRole = null; currentUser = null;
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-nombre').value = '';
+  document.getElementById('login-pin').value = '';
+  selectedRole = null;
+  document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('selected'));
+}
+
+// ===== NAV =====
+function setupNav() {
+  const nav = document.getElementById('bottom-nav');
+  let items = [];
+  if (currentRole === 'dueno') {
+    items = [
+      { icon: '🏠', label: 'Inicio', view: 'inicio' },
+      { icon: '📊', label: 'Reportes', view: 'reportes' },
+    ];
+  } else if (currentRole === 'cobrador') {
+    items = [
+      { icon: '🌿', label: 'Granjas', view: 'granjas' },
+      { icon: '📊', label: 'Reportes', view: 'reportes' },
+    ];
+  } else {
+    items = [
+      { icon: '🍽️', label: 'Mis Pedidos', view: 'pedidos' },
+    ];
+  }
+  nav.innerHTML = items.map((it, i) => `
+    <button class="nav-item ${i===0?'active':''}" onclick="navTo('${it.view}', this)">
+      <div class="nav-icon">${it.icon}</div>
+      <div class="nav-label">${it.label}</div>
+    </button>
+  `).join('');
+}
+
+function navTo(view, btn) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  if (view === 'inicio') renderInicio();
+  else if (view === 'granjas') renderCobradorGranjas();
+  else if (view === 'reportes') renderReportes();
+  else if (view === 'pedidos') renderTrabajador();
+}
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== DUEÑO =====
+function renderInicio() {
+  showView('view-dueno-inicio');
+  document.getElementById('dueno-nombre-bienvenida').textContent = currentUser.split(' ')[0];
+  const fab = document.getElementById('fab-btn');
+  fab.style.display = 'flex';
+  fab.onclick = () => abrirModalGranja();
+
+  // Stats globales
+  let totalPagado = 0, totalDebe = 0, totalComidas = data.registros.length;
+  data.granjas.forEach(g => {
+    const t = totalGranja(g.id);
+    totalPagado += t.pagado;
+    totalDebe += t.debe;
+  });
+  document.getElementById('stats-dueno').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--verde)">$${totalPagado.toFixed(0)}</div>
+      <div class="stat-label">Cobrado CAD</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--rojo)">$${totalDebe.toFixed(0)}</div>
+      <div class="stat-label">Por Cobrar CAD</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${totalComidas}</div>
+      <div class="stat-label">Comidas</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${data.granjas.length}</div>
+      <div class="stat-label">Granjas</div>
+    </div>
+  `;
+
+  // Lista granjas
+  const cont = document.getElementById('lista-granjas-dueno');
+  if (!data.granjas.length) { cont.innerHTML = '<div class="empty"><div class="empty-icon">🌿</div><p>Sin granjas aún</p></div>'; return; }
+  cont.innerHTML = data.granjas.map(g => {
+    const t = totalGranja(g.id);
+    const trabs = data.trabajadores.filter(tr => tr.granjaId === g.id).length;
+    return `
+      <div class="granja-item" onclick="verGranjaDueno(${g.id})">
+        <div class="granja-icon">🌾</div>
+        <div class="granja-info">
+          <div class="granja-name">${g.nombre}</div>
+          <div class="granja-meta">${g.ubicacion} · ${trabs} trabajadores · Cobrador: ${g.cobrador}</div>
+        </div>
+        <div class="granja-deuda">
+          <div class="granja-monto">$${t.debe.toFixed(0)}</div>
+          <div class="granja-monto-label">por cobrar</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function verGranjaDueno(granjaId) {
+  currentGranjaId = granjaId;
+  vistaAnterior = 'dueno-inicio';
+  const granja = data.granjas.find(g => g.id === granjaId);
+  const t = totalGranja(granjaId);
+  const trabs = data.trabajadores.filter(tr => tr.granjaId === granjaId);
+
+  document.getElementById('resumen-granja-header').innerHTML = `
+    <div class="resumen-granja-name">🌾 ${granja.nombre}</div>
+    <div style="font-size:0.75rem;opacity:0.6;margin-bottom:12px;">${granja.ubicacion} · Cobrador: ${granja.cobrador}</div>
+    <div class="resumen-stats">
+      <div class="res-stat"><div class="res-num">$${t.pagado.toFixed(0)}</div><div class="res-label">Cobrado</div></div>
+      <div class="res-stat"><div class="res-num" style="color:#f4c262;">$${t.debe.toFixed(0)}</div><div class="res-label">Pendiente</div></div>
+      <div class="res-stat"><div class="res-num">${trabs.length}</div><div class="res-label">Trabaj.</div></div>
+    </div>
+  `;
+
+  const cont = document.getElementById('lista-trabajadores-granja');
+  cont.innerHTML = trabs.map(tr => {
+    const deuda = deudaTrabajador(tr.id);
+    const comidas = data.registros.filter(r => r.trabId === tr.id).length;
+    return `
+      <div class="trabajador-item">
+        <div class="trab-avatar">${iniciales(tr.nombre)}</div>
+        <div class="trab-info">
+          <div class="trab-name">${tr.nombre}</div>
+          <div class="trab-meta">${tr.empresa} · ${comidas} comidas</div>
+        </div>
+        <div class="trab-deuda ${deuda > 0 ? 'debe' : 'pagado'}">$${deuda.toFixed(2)}</div>
+      </div>`;
+  }).join('') || '<div class="empty"><div class="empty-icon">👷</div><p>Sin trabajadores</p></div>';
+
+  showView('view-dueno-granja');
+  document.getElementById('fab-btn').style.display = 'none';
+}
+
+function volverInicio() {
+  renderInicio();
+}
+
+// ===== COBRADOR =====
+function renderCobradorGranjas() {
+  showView('view-cobrador-granjas');
+  document.getElementById('fab-btn').style.display = 'flex';
+  document.getElementById('fab-btn').onclick = () => abrirModalGranja();
+
+  const cont = document.getElementById('lista-granjas-cobrador');
+  if (!data.granjas.length) { cont.innerHTML = '<div class="empty"><div class="empty-icon">🌿</div><p>Sin granjas aún</p></div>'; return; }
+  cont.innerHTML = data.granjas.map(g => {
+    const t = totalGranja(g.id);
+    const trabs = data.trabajadores.filter(tr => tr.granjaId === g.id).length;
+    return `
+      <div class="granja-item" onclick="entrarGranjaCobrador(${g.id})">
+        <div class="granja-icon">🌾</div>
+        <div class="granja-info">
+          <div class="granja-name">${g.nombre}</div>
+          <div class="granja-meta">${g.ubicacion} · ${trabs} personas</div>
+        </div>
+        <div class="granja-deuda">
+          <div class="granja-monto">$${t.debe.toFixed(0)}</div>
+          <div class="granja-monto-label">pendiente</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function entrarGranjaCobrador(granjaId) {
+  currentGranjaId = granjaId;
+  const granja = data.granjas.find(g => g.id === granjaId);
+  document.getElementById('cobrador-granja-titulo').textContent = '🌾 ' + granja.nombre;
+  document.getElementById('fab-btn').style.display = 'none';
+  renderTrabajadoresCobrador();
+  showView('view-cobrador-en-granja');
+}
+
+function renderTrabajadoresCobrador() {
+  const trabs = data.trabajadores.filter(t => t.granjaId === currentGranjaId);
+  const cont = document.getElementById('lista-trabajadores-cobrador');
+  cont.innerHTML = trabs.map(tr => {
+    const deuda = deudaTrabajador(tr.id);
+    const comidas = data.registros.filter(r => r.trabId === tr.id).length;
+    return `
+      <div class="trabajador-item" onclick="verDetalleTrabajador(${tr.id})">
+        <div class="trab-avatar">${iniciales(tr.nombre)}</div>
+        <div class="trab-info">
+          <div class="trab-name">${tr.nombre}</div>
+          <div class="trab-meta">${tr.empresa} · ${comidas} comidas</div>
+        </div>
+        <div class="trab-deuda ${deuda > 0 ? 'debe' : 'pagado'}">$${deuda.toFixed(2)}</div>
+      </div>`;
+  }).join('') || '<div class="empty"><div class="empty-icon">👷</div><p>Agrega trabajadores con el botón +</p></div>';
+}
+
+function volverGranjasCobrador() {
+  renderCobradorGranjas();
+}
+
+// ===== DETALLE TRABAJADOR =====
+function verDetalleTrabajador(trabId) {
+  currentTrabajadorId = trabId;
+  vistaAnterior = 'cobrador-en-granja';
+  const trab = data.trabajadores.find(t => t.id === trabId);
+  const deuda = deudaTrabajador(trabId);
+  const regs = data.registros.filter(r => r.trabId === trabId);
+
+  document.getElementById('trab-detalle-header').innerHTML = `
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="trab-avatar" style="width:52px;height:52px;font-size:1rem;">${iniciales(trab.nombre)}</div>
+        <div>
+          <div style="font-weight:700;font-size:1.05rem;">${trab.nombre}</div>
+          <div style="font-size:0.75rem;color:var(--gris);">${trab.empresa}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right;">
+          <div style="font-size:1.4rem;font-weight:800;color:${deuda>0?'var(--rojo)':'var(--verde-claro)'};">$${deuda.toFixed(2)}</div>
+          <div style="font-size:0.65rem;color:var(--gris);">saldo pendiente</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Historial
+  const listaCont = document.getElementById('lista-registros-trab');
+  if (!regs.length) {
+    listaCont.innerHTML = '<div class="empty"><div class="empty-icon">🍽️</div><p>Sin registros aún</p></div>';
+  } else {
+    listaCont.innerHTML = '<div class="card">' + regs.map(r => `
+      <div class="registro-item">
+        <div class="reg-fecha">${formatDate(r.fecha)}</div>
+        <div class="reg-info">
+          <div class="reg-comida">${r.comida}</div>
+        </div>
+        <div class="reg-monto ${r.pago}">$${r.precio.toFixed(2)}</div>
+        <div class="lock-icon">🔒</div>
+      </div>`).join('') + '</div>';
+  }
+
+  // Badge deuda
+  document.getElementById('trab-deuda-total').textContent = deuda > 0 ? `Debe $${deuda.toFixed(2)}` : '✓ Al corriente';
+  document.getElementById('trab-deuda-total').className = 'badge ' + (deuda > 0 ? 'badge-rojo' : 'badge-verde');
+
+  // Sección cobrar
+  const cobrarSec = document.getElementById('cobrar-section');
+  cobrarSec.style.display = deuda > 0 ? 'block' : 'none';
+  if (deuda > 0) document.getElementById('cobro-monto').value = deuda.toFixed(2);
+
+  document.getElementById('reg-comida').value = '';
+  document.getElementById('reg-precio').value = '';
+  document.getElementById('reg-pago').value = 'debe';
+
+  showView('view-detalle-trabajador');
+  document.getElementById('fab-btn').style.display = 'none';
+}
+
+function volverDesdeDetalleTrab() {
+  renderTrabajadoresCobrador();
+  showView('view-cobrador-en-granja');
+}
+
+function registrarComida() {
+  const comida = document.getElementById('reg-comida').value.trim();
+  const precio = parseFloat(document.getElementById('reg-precio').value);
+  const pago = document.getElementById('reg-pago').value;
+  if (!comida || isNaN(precio) || precio <= 0) { showToast('⚠️ Llena todos los campos'); return; }
+  const reg = {
+    id: data.nextId.registros++,
+    trabId: currentTrabajadorId,
+    granjaId: currentGranjaId,
+    comida, precio, pago,
+    fecha: todayStr(),
+    locked: true
+  };
+  data.registros.push(reg);
+  showToast('✅ Comida registrada y bloqueada 🔒');
+  verDetalleTrabajador(currentTrabajadorId);
+}
+
+function registrarCobro() {
+  const monto = parseFloat(document.getElementById('cobro-monto').value);
+  if (isNaN(monto) || monto <= 0) { showToast('⚠️ Ingresa un monto válido'); return; }
+  data.cobros.push({
+    id: data.nextId.cobros++,
+    trabId: currentTrabajadorId,
+    granjaId: currentGranjaId,
+    monto,
+    fecha: todayStr(),
+    locked: true
+  });
+  showToast('💰 Cobro registrado permanentemente 🔒');
+  verDetalleTrabajador(currentTrabajadorId);
+}
+
+// ===== TRABAJADOR =====
+function renderTrabajador() {
+  showView('view-trabajador');
+  document.getElementById('fab-btn').style.display = 'none';
+
+  // Buscar trabajador por nombre
+  const trab = data.trabajadores.find(t => t.nombre.toLowerCase().includes(currentUser.toLowerCase().split(' ')[0].toLowerCase()));
+  if (!trab) {
+    document.getElementById('stats-trabajador').innerHTML = '<div class="empty" style="grid-column:span 2"><div class="empty-icon">👷</div><p>Tu perfil aún no está registrado.<br>Dile a tu cobrador que te agregue.</p></div>';
+    document.getElementById('lista-registros-trabajador').innerHTML = '';
+    document.getElementById('trab-granja-label').textContent = '';
+    return;
+  }
+
+  const granja = data.granjas.find(g => g.id === trab.granjaId);
+  const regs = data.registros.filter(r => r.trabId === trab.id);
+  const deuda = deudaTrabajador(trab.id);
+  const totalComidas = regs.length;
+  const totalPagado = regs.filter(r => r.pago === 'pagado').reduce((s,r) => s+r.precio, 0);
+
+  document.getElementById('trab-granja-label').textContent = granja ? `📍 ${granja.nombre}` : '';
+  document.getElementById('stats-trabajador').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-num" style="color:var(--rojo)">$${deuda.toFixed(0)}</div>
+      <div class="stat-label">Saldo Pendiente</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">${totalComidas}</div>
+      <div class="stat-label">Comidas Total</div>
+    </div>
+  `;
+
+  document.getElementById('lista-registros-trabajador').innerHTML = regs.length
+    ? '<div class="card">' + regs.map(r => `
+      <div class="registro-item">
+        <div class="reg-fecha">${formatDate(r.fecha)}</div>
+        <div class="reg-info"><div class="reg-comida">${r.comida}</div></div>
+        <div class="reg-monto ${r.pago === 'pagado' ? 'pagado' : 'debe'}">
+          ${r.pago === 'pagado' ? '✓' : '⚠️'} $${r.precio.toFixed(2)}
+        </div>
+      </div>`).join('') + '</div>'
+    : '<div class="empty"><div class="empty-icon">🍽️</div><p>Sin comidas registradas aún</p></div>';
+}
+
+// ===== REPORTES =====
+function renderReportes() {
+  showView('view-reportes');
+  document.getElementById('fab-btn').style.display = 'none';
+  const cont = document.getElementById('reporte-contenido');
+  cont.innerHTML = data.granjas.map(g => {
+    const t = totalGranja(g.id);
+    const trabs = data.trabajadores.filter(tr => tr.granjaId === g.id);
+    const comidas = data.registros.filter(r => r.granjaId === g.id).length;
+    return `
+      <div class="resumen-granja" style="margin-bottom:14px;">
+        <div class="resumen-granja-name">🌾 ${g.nombre}</div>
+        <div style="font-size:0.72rem;opacity:0.55;margin-bottom:14px;">${g.ubicacion} · Cobrador: ${g.cobrador}</div>
+        <div class="resumen-stats">
+          <div class="res-stat"><div class="res-num">$${t.pagado.toFixed(0)}</div><div class="res-label">Cobrado</div></div>
+          <div class="res-stat"><div class="res-num" style="color:#f4c262;">$${t.debe.toFixed(0)}</div><div class="res-label">Pendiente</div></div>
+          <div class="res-stat"><div class="res-num">${comidas}</div><div class="res-label">Comidas</div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:20px;">
+        ${trabs.map(tr => {
+          const d = deudaTrabajador(tr.id);
+          return `<div class="registro-item">
+            <div class="reg-info"><div class="reg-comida">${tr.nombre}</div><div class="reg-granja">${tr.empresa}</div></div>
+            <div class="reg-monto ${d>0?'debe':'pagado'}">${d>0?'Debe':'✓'} $${d.toFixed(2)}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }).join('') || '<div class="empty"><div class="empty-icon">📊</div><p>Sin datos aún</p></div>';
+}
+
+// ===== MODALES =====
+function abrirModalGranja() { abrirModal('modal-granja'); }
+function abrirModalTrabajador() { abrirModal('modal-trabajador'); }
+
+function guardarGranja() {
+  const nombre = document.getElementById('nueva-granja-nombre').value.trim();
+  const ubicacion = document.getElementById('nueva-granja-ubicacion').value.trim();
+  const cobrador = document.getElementById('nueva-granja-cobrador').value.trim();
+  if (!nombre) { showToast('⚠️ Escribe el nombre de la granja'); return; }
+  data.granjas.push({ id: data.nextId.granjas++, nombre, ubicacion: ubicacion || 'Ontario, CA', cobrador: cobrador || currentUser });
+  cerrarModal('modal-granja');
+  document.getElementById('nueva-granja-nombre').value = '';
+  document.getElementById('nueva-granja-ubicacion').value = '';
+  document.getElementById('nueva-granja-cobrador').value = '';
+  showToast('✅ Granja agregada');
+  if (currentRole === 'dueno') renderInicio();
+  else renderCobradorGranjas();
+}
+
+function guardarTrabajador() {
+  const nombre = document.getElementById('nuevo-trab-nombre').value.trim();
+  const empresa = document.getElementById('nuevo-trab-empresa').value.trim();
+  if (!nombre) { showToast('⚠️ Escribe el nombre'); return; }
+  data.trabajadores.push({ id: data.nextId.trabajadores++, granjaId: currentGranjaId, nombre, empresa: empresa || 'General' });
+  cerrarModal('modal-trabajador');
+  document.getElementById('nuevo-trab-nombre').value = '';
+  document.getElementById('nuevo-trab-empresa').value = '';
+  showToast('✅ Trabajador agregado');
+  renderTrabajadoresCobrador();
+}
+
+function fabAction() {
+  if (currentRole === 'dueno') abrirModalGranja();
+  else if (currentRole === 'cobrador') abrirModalGranja();
+}
+</script>
+</body>
+</html>
